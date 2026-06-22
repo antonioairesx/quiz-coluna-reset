@@ -58,12 +58,12 @@ const STEPS: Step[] = [
   },
   {
     type: 'question', id: 'tempo_dor', label: 'Sua dor',
-    question: 'Há quanto tempo você convive com dor lombar?',
+    question: 'Há quanto tempo você convive com dor nas costas?',
     options: ['Menos de 6 meses', 'De 6 meses a 2 anos', 'De 2 a 5 anos', 'Mais de 5 anos'],
   },
   {
     type: 'question', id: 'tentou_antes', label: 'Histórico',
-    question: 'Você já tentou resolver a dor lombar antes?',
+    question: 'Você já tentou resolver a dor nas costas antes?',
     options: [
       'Sim, mas não funcionou',
       'Sim, melhorou mas a dor voltou',
@@ -75,7 +75,7 @@ const STEPS: Step[] = [
     type: 'break',
     title: 'Por que as soluções comuns não resolvem?',
     body: [
-      'A maioria das pessoas com dor lombar tenta alongamento, academia ou fisioterapia. Algumas melhoram por um tempo. Mas a dor volta.',
+      'A maioria das pessoas com dor nas costas tentam alongamento, academia ou fisioterapia. Algumas melhoram por um tempo. Mas a dor volta.',
       'O motivo não é falta de esforço. É que essas abordagens atacam o sintoma, não a causa real.',
       'Continue respondendo para descobrir o que está realmente causando a sua dor e como reverter isso.',
     ],
