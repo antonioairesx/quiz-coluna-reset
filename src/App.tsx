@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 // ─── CONFIG (muda só aqui entre os dois deploys) ───────────────────
 const PRODUCT_NAME = 'Coluna Reset'
 const PRODUCT_NAME_UPPER = 'COLUNA RESET'
-const CHECKOUT_URL = 'https://pay.kiwify.com.br/COLOQUE_LINK_AQUI'
+const CHECKOUT_URL = 'https://pay.cakto.com.br/o3aqkgo_910441'
 // ───────────────────────────────────────────────────────────────────
 
 const ACCENT = '#F5820D'
