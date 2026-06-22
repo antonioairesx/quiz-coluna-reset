@@ -268,11 +268,6 @@ function Header({ step, stepIdx }: { step: Step; stepIdx: number }) {
             {PRODUCT_NAME_UPPER}
           </span>
         </div>
-        {qNum && (
-          <span style={{ fontSize: 12, color: MUTED }}>
-            {qNum} de {TOTAL_QUESTIONS}
-          </span>
-        )}
       </div>
       <div style={{ height: 3, background: '#E8E8E5' }}>
         <div style={{ height: 3, width: `${progress}%`, background: ACCENT, borderRadius: '0 2px 2px 0', transition: 'width 0.4s ease' }} />
