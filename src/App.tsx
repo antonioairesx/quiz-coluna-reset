@@ -29,6 +29,12 @@ type BreakStep = {
   title: string
   body: string[]
   cta: string
+  expert?: {
+    name: string
+    role: string
+    photo: string
+    bio: string[]
+  }
 }
 type VSLStep = {
   type: 'vsl'
@@ -41,18 +47,9 @@ type TestimonialStep = {
   images: string[]
   cta: string
 }
-type ExpertStep = {
-  type: 'expert'
-  label: string
-  name: string
-  role: string
-  photo: string
-  bio: string[]
-  cta: string
-}
 type LoadingStep = { type: 'loading' }
 type ResultStep = { type: 'result' }
-type Step = QuestionStep | BreakStep | VSLStep | TestimonialStep | ExpertStep | LoadingStep | ResultStep
+type Step = QuestionStep | BreakStep | VSLStep | TestimonialStep | LoadingStep | ResultStep
 
 // ─── STEPS ────────────────────────────────────────────────────────
 const STEPS: Step[] = [
@@ -96,6 +93,15 @@ const STEPS: Step[] = [
       'Continue respondendo para descobrir o que está realmente causando a sua dor e como reverter isso.',
     ],
     cta: 'Entendi, continuar',
+    expert: {
+      name: 'Rafael Souza',
+      role: 'Criador do método Coluna Reset',
+      photo: '/rafael.webp',
+      bio: [
+        'Rafael passou anos estudando por que tanta gente que trabalha sentada convive com dor lombar mesmo fazendo academia, alongamento e fisioterapia. A resposta não estava no esforço, estava no músculo errado sendo tratado.',
+        'Foi assim que ele identificou o Colapso de Ativação Lombar e desenvolveu o Coluna Reset: uma sequência de 8 minutos que reativa os estabilizadores profundos na ordem certa, sem equipamento e sem sair do lugar onde você trabalha.',
+      ],
+    },
   },
   // BLOCO B — Problema
   {
@@ -190,19 +196,6 @@ const STEPS: Step[] = [
         body: `O ${PRODUCT_NAME} usa uma sequência específica: ativa os estabilizadores profundos primeiro, depois os superficiais. Em 8 minutos, o Colapso é revertido e a coluna recupera suporte real.`,
       },
     ],
-  },
-  // QUEM ESTÁ POR TRÁS DO MÉTODO
-  {
-    type: 'expert',
-    label: 'Quem está por trás do método',
-    name: 'Rafael Souza',
-    role: 'Criador do método Coluna Reset',
-    photo: '/rafael.webp',
-    bio: [
-      'Rafael passou anos estudando por que tanta gente que trabalha sentada convive com dor lombar mesmo fazendo academia, alongamento e fisioterapia. A resposta não estava no esforço, estava no músculo errado sendo tratado.',
-      'Foi assim que ele identificou o Colapso de Ativação Lombar e desenvolveu o Coluna Reset: uma sequência de 8 minutos que reativa os estabilizadores profundos na ordem certa, sem equipamento e sem sair do lugar onde você trabalha.',
-    ],
-    cta: 'Continuar →',
   },
   // BLOCO C — Implicação
   {
@@ -391,36 +384,6 @@ function QuestionView({ step, selected, onSelect, onContinue }: {
   )
 }
 
-function ExpertView({ step, onContinue }: { step: ExpertStep; onContinue: () => void }) {
-  return (
-    <div style={{ padding: '32px 18px 32px' }}>
-      <p style={{ fontSize: 11, fontWeight: 600, color: ACCENT, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 14 }}>
-        {step.label}
-      </p>
-      <div style={{ borderRadius: 14, overflow: 'hidden', border: `1px solid ${BORDER}`, marginBottom: 18 }}>
-        <img src={step.photo} alt={step.name} loading="lazy" style={{ width: '100%', height: 'auto', display: 'block' }} />
-      </div>
-      <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 26, color: DARK, lineHeight: 1.1, marginBottom: 4 }}>
-        {step.name}
-      </h2>
-      <p style={{ fontSize: 13, fontWeight: 600, color: ACCENT_TEXT, marginBottom: 18 }}>
-        {step.role}
-      </p>
-      {step.bio.map((p, i) => (
-        <p key={i} style={{ fontSize: 14, color: MUTED, lineHeight: 1.7, marginBottom: i < step.bio.length - 1 ? 12 : 24 }}>
-          {p}
-        </p>
-      ))}
-      <button
-        onClick={onContinue}
-        style={{ width: '100%', padding: 15, background: ACCENT, color: WHITE, border: 'none', borderRadius: 10, fontFamily: "'Barlow', sans-serif", fontSize: 16, fontWeight: 600, cursor: 'pointer' }}
-      >
-        {step.cta}
-      </button>
-    </div>
-  )
-}
-
 function TestimonialCarousel({ images }: { images: string[] }) {
   const [idx, setIdx] = useState(0)
   const startX = useRef<number | null>(null)
@@ -528,6 +491,33 @@ function BreakView({ step, onContinue }: { step: BreakStep; onContinue: () => vo
           {p}
         </p>
       ))}
+
+      {step.expert && (
+        <div style={{ marginBottom: 24, paddingTop: 20, borderTop: `1px solid ${BORDER}` }}>
+          <div style={{ display: 'flex', gap: 14, alignItems: 'center', marginBottom: 16 }}>
+            <img
+              src={step.expert.photo}
+              alt={step.expert.name}
+              loading="lazy"
+              style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', objectPosition: 'top center', flexShrink: 0, border: `2px solid ${BORDER}` }}
+            />
+            <div>
+              <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 20, color: DARK, lineHeight: 1.1, marginBottom: 2 }}>
+                {step.expert.name}
+              </p>
+              <p style={{ fontSize: 12, fontWeight: 600, color: ACCENT_TEXT }}>
+                {step.expert.role}
+              </p>
+            </div>
+          </div>
+          {step.expert.bio.map((p, i) => (
+            <p key={i} style={{ fontSize: 14, color: MUTED, lineHeight: 1.7, marginBottom: i < step.expert!.bio.length - 1 ? 12 : 0 }}>
+              {p}
+            </p>
+          ))}
+        </div>
+      )}
+
       <button
         onClick={onContinue}
         style={{ width: '100%', padding: 15, background: ACCENT, color: WHITE, border: 'none', borderRadius: 10, fontFamily: "'Barlow', sans-serif", fontSize: 16, fontWeight: 600, cursor: 'pointer' }}
@@ -819,9 +809,6 @@ export default function App() {
           )}
           {step.type === 'testimonial' && (
             <TestimonialView step={step} onContinue={advance} />
-          )}
-          {step.type === 'expert' && (
-            <ExpertView step={step} onContinue={advance} />
           )}
           {step.type === 'loading' && (
             <LoadingView onComplete={advance} />
