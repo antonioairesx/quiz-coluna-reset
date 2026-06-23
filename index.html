@@ -23,9 +23,6 @@
     fbq('init','1143584338840907');
     fbq('track','PageView');
     </script>
-    <noscript><img height="1" width="1" style="display:none"
-    src="https://www.facebook.com/tr?id=1143584338840907&ev=PageView&noscript=1"
-    /></noscript>
     <!-- End Meta Pixel -->
     <style>
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -39,6 +36,10 @@
     </style>
   </head>
   <body>
+    <!-- Meta Pixel (noscript fallback) -->
+    <noscript><img height="1" width="1" style="display:none"
+    src="https://www.facebook.com/tr?id=1143584338840907&ev=PageView&noscript=1"
+    /></noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
