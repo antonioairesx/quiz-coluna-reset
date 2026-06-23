@@ -1,0 +1,790 @@
+import { useState, useEffect, useRef, type TouchEvent } from 'react'
+
+// ─── CONFIG (muda só aqui entre os dois deploys) ───────────────────
+const PRODUCT_NAME = 'Coluna Reset'
+const PRODUCT_NAME_UPPER = 'COLUNA RESET'
+const CHECKOUT_URL = 'https://pay.cakto.com.br/o3aqkgo_910441'
+// ───────────────────────────────────────────────────────────────────
+
+const ACCENT = '#F5820D'
+const ACCENT_LIGHT = '#FEF3E2'
+const ACCENT_TEXT = '#B85800'
+const DARK = '#1A1F2E'
+const MUTED = '#6B7280'
+const BORDER = '#E8E8E5'
+const WHITE = '#FFFFFF'
+const PAGE_BG = '#F0F0EE'
+
+// ─── TYPES ────────────────────────────────────────────────────────
+type QuestionStep = {
+  type: 'question'
+  id: string
+  label: string
+  question: string
+  options: string[]
+  multi?: boolean
+}
+type BreakStep = {
+  type: 'break'
+  title: string
+  body: string[]
+  cta: string
+}
+type VSLStep = {
+  type: 'vsl'
+  slides: { title: string; body: string }[]
+}
+type TestimonialStep = {
+  type: 'testimonial'
+  label: string
+  title: string
+  images: string[]
+  cta: string
+}
+type LoadingStep = { type: 'loading' }
+type ResultStep = { type: 'result' }
+type Step = QuestionStep | BreakStep | VSLStep | TestimonialStep | LoadingStep | ResultStep
+
+// ─── STEPS ────────────────────────────────────────────────────────
+const STEPS: Step[] = [
+  // BLOCO A — Situacionais
+  {
+    type: 'question', id: 'sexo', label: 'Sobre você',
+    question: 'Qual é o seu sexo?',
+    options: ['Masculino', 'Feminino'],
+  },
+  {
+    type: 'question', id: 'idade', label: 'Sobre você',
+    question: 'Qual é a sua faixa etária?',
+    options: ['25 a 35 anos', '36 a 45 anos', '46 a 55 anos', 'Acima de 55 anos'],
+  },
+  {
+    type: 'question', id: 'horas_sentado', label: 'Sua rotina',
+    question: 'Quantas horas por dia você fica sentado trabalhando?',
+    options: ['Menos de 4 horas', 'De 4 a 6 horas', 'De 6 a 8 horas', 'Mais de 8 horas'],
+  },
+  {
+    type: 'question', id: 'tempo_dor', label: 'Sua dor',
+    question: 'Há quanto tempo você convive com dor nas costas?',
+    options: ['Menos de 6 meses', 'De 6 meses a 2 anos', 'De 2 a 5 anos', 'Mais de 5 anos'],
+  },
+  {
+    type: 'question', id: 'tentou_antes', label: 'Histórico',
+    question: 'Você já tentou resolver a dor nas costas antes?',
+    options: [
+      'Sim, mas não funcionou',
+      'Sim, melhorou mas a dor voltou',
+      'Nunca tentei de verdade',
+    ],
+  },
+  // BREAK 1
+  {
+    type: 'break',
+    title: 'Por que as soluções comuns não resolvem?',
+    body: [
+      'A maioria das pessoas com dor nas costas tentam alongamento, academia ou fisioterapia. Algumas melhoram por um tempo. Mas a dor volta.',
+      'O motivo não é falta de esforço. É que essas abordagens atacam o sintoma, não a causa real.',
+      'Continue respondendo para descobrir o que está realmente causando a sua dor e como reverter isso.',
+    ],
+    cta: 'Entendi, continuar',
+  },
+  // BLOCO B — Problema
+  {
+    type: 'question', id: 'o_que_tentou', label: 'O que você tentou',
+    question: 'O que você já tentou para resolver a dor? (pode marcar mais de uma)',
+    options: ['Alongamento em casa', 'Academia', 'Fisioterapia', 'Remédio para dor', 'Nada até agora'],
+    multi: true,
+  },
+  {
+    type: 'question', id: 'resultado_tentativas', label: 'Resultado',
+    question: 'Qual foi o resultado dessas tentativas?',
+    options: [
+      'Funcionou por um tempo, depois a dor voltou',
+      'Não resolveu nada',
+      'Melhorou mas não eliminou a dor',
+      'Nunca tentei',
+    ],
+  },
+  {
+    type: 'question', id: 'onde_dor', label: 'Localização',
+    question: 'Onde você sente a dor com mais frequência?',
+    options: [
+      'Lombar baixa (região do cinto)',
+      'Lombar e glúteo',
+      'Lombar irradiando para a perna',
+      'Difusa em toda a parte baixa das costas',
+    ],
+  },
+  {
+    type: 'question', id: 'quando_dor', label: 'Timing',
+    question: 'Em que momento do dia a dor costuma ser mais forte?',
+    options: [
+      'Ao acordar',
+      'Depois de horas sentado',
+      'No fim do expediente',
+      'A dor é constante ao longo do dia',
+    ],
+  },
+  {
+    type: 'question', id: 'intensidade', label: 'Intensidade',
+    question: 'Como você descreveria a dor nos dias mais difíceis?',
+    options: [
+      'Incômoda mas suportável',
+      'Moderada, atrapalha minha concentração',
+      'Forte, difícil trabalhar',
+      'Às vezes incapacitante',
+    ],
+  },
+  {
+    type: 'question', id: 'se_levanta', label: 'Comportamento',
+    question: 'Você costuma precisar se levantar para aliviar a dor durante o trabalho?',
+    options: ['Não', 'Às vezes sim', 'Com frequência', 'Quase o tempo todo'],
+  },
+  {
+    type: 'question', id: 'produtividade', label: 'Impacto no trabalho',
+    question: 'A dor afeta sua produtividade?',
+    options: [
+      'Não',
+      'Às vezes perco o foco',
+      'Frequentemente fico improdutivo',
+      'Impacta diretamente minha entrega',
+    ],
+  },
+  {
+    type: 'question', id: 'vida_pessoal', label: 'Impacto pessoal',
+    question: 'A dor acompanha você fora do trabalho?',
+    options: [
+      'Não',
+      'Um pouco',
+      'Chego em casa cansado e doendo',
+      'Compromete meu tempo com a família',
+    ],
+  },
+  // MINI VSL
+  {
+    type: 'vsl',
+    slides: [
+      {
+        title: 'O músculo que ninguém te contou',
+        body: 'Existe um grupo muscular chamado estabilizadores lombares. São responsáveis por sustentar sua coluna durante a posição sentada.',
+      },
+      {
+        title: 'O que acontece depois de 2h sentado',
+        body: 'Esses músculos entram em modo de hibernação. Eles param de trabalhar ativamente. Isso é o Colapso de Ativação Lombar — e é o que está causando sua dor.',
+      },
+      {
+        title: 'Por que o alongamento falha',
+        body: 'Alongar um músculo hibernado é como espremer um pano seco — você pode esticar, mas ele não volta a funcionar. O alívio dura minutos. Depois a dor volta.',
+      },
+      {
+        title: `O que o ${PRODUCT_NAME} faz`,
+        body: `O ${PRODUCT_NAME} usa uma sequência específica: ativa os estabilizadores profundos primeiro, depois os superficiais. Em 8 minutos, o Colapso é revertido e a coluna recupera suporte real.`,
+      },
+    ],
+  },
+  // BLOCO C — Implicação
+  {
+    type: 'question', id: 'frequencia_pensamento', label: 'Impacto mental',
+    question: 'Com que frequência você pensa na dor durante o expediente?',
+    options: ['Raramente', 'Algumas vezes por dia', 'Frequentemente', 'O tempo todo'],
+  },
+  {
+    type: 'question', id: 'humor', label: 'Impacto emocional',
+    question: 'A dor já afetou seu humor ou sua paciência com pessoas próximas?',
+    options: ['Não', 'Raramente', 'Às vezes sim', 'Com frequência'],
+  },
+  {
+    type: 'question', id: 'deixou_de_fazer', label: 'Limitações',
+    question: 'Você já deixou de fazer algo que gostava por causa da dor?',
+    options: ['Nunca', 'Raramente', 'Algumas vezes', 'Com frequência'],
+  },
+  {
+    type: 'question', id: 'preocupacao_futuro', label: 'Perspectiva',
+    question: 'Você se preocupa com como sua lombar vai estar daqui a 5 ou 10 anos?',
+    options: ['Não pensei nisso', 'Um pouco', 'Sim, me preocupa', 'Muito, tenho medo de piorar'],
+  },
+  {
+    type: 'question', id: 'rotina_2_anos', label: 'Projeção',
+    question: 'Se você não resolver isso, como imagina sua rotina daqui a 2 anos?',
+    options: ['Igual a hoje', 'Um pouco pior', 'Significativamente pior', 'Não quero nem pensar'],
+  },
+  // BLOCO D — Pré-comprometimento
+  {
+    type: 'question', id: 'faria_protocolo', label: 'Comprometimento',
+    question: 'Se existisse um protocolo de 8 minutos provado, você faria todos os dias?',
+    options: ['Sim, com certeza', 'Provavelmente sim', 'Dependeria da dificuldade', 'Teria dificuldade de manter'],
+  },
+  {
+    type: 'question', id: 'melhor_horario', label: 'Rotina',
+    question: 'Qual o melhor momento para encaixar na sua rotina?',
+    options: ['Antes do trabalho', 'Na pausa do almoço', 'Em uma pausa no expediente', 'Após o trabalho'],
+  },
+  {
+    type: 'question', id: 'sem_sair', label: 'Praticidade',
+    question: 'Você prefere uma solução que dá para fazer sem sair do lugar onde trabalha?',
+    options: ['Sim, com certeza', 'Tanto faz', 'Prefiro fora do ambiente de trabalho'],
+  },
+  {
+    type: 'question', id: 'motivacao', label: 'Motivação',
+    question: 'O que te motivaria mais?',
+    options: [
+      'Aliviar a dor rapidamente',
+      'Ter mais energia e foco ao longo do dia',
+      'Evitar que a dor piore com a idade',
+      'As três coisas',
+    ],
+  },
+  {
+    type: 'question', id: 'pronto', label: 'Decisão',
+    question: 'Você está disposto a testar uma abordagem diferente do que tentou antes?',
+    options: ['Sim, estou pronto', 'Depende do que é', 'Estou cético mas curioso'],
+  },
+  // DEPOIMENTOS (antes do diagnóstico)
+  {
+    type: 'testimonial',
+    label: 'Quem já aplicou',
+    title: 'O que aconteceu com quem reverteu o Colapso de Ativação Lombar',
+    images: ['/depoimentos/depo-01.webp', '/depoimentos/depo-02.webp'],
+    cta: 'Ver meu diagnóstico →',
+  },
+  // LOADING + RESULT
+  { type: 'loading' },
+  { type: 'result' },
+]
+
+const TOTAL_QUESTIONS = STEPS.filter(s => s.type === 'question').length
+
+function getQuestionNumber(idx: number) {
+  let n = 0
+  for (let i = 0; i <= idx; i++) if (STEPS[i].type === 'question') n++
+  return n
+}
+
+function getProgress(idx: number) {
+  const step = STEPS[idx]
+  if (step.type === 'loading') return 0
+  if (step.type === 'result') return 100
+  const qNum = getQuestionNumber(idx)
+  return Math.round((qNum / TOTAL_QUESTIONS) * 90)
+}
+
+// ─── SUBCOMPONENTS ────────────────────────────────────────────────
+
+function Header({ step, stepIdx }: { step: Step; stepIdx: number }) {
+  if (step.type === 'result') return null
+  const qNum = step.type === 'question' ? getQuestionNumber(stepIdx) : null
+  const progress = getProgress(stepIdx)
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 18px', borderBottom: `1px solid ${BORDER}`, background: WHITE }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <img src="/icon.png" alt="" style={{ width: 28, height: 'auto', objectFit: 'contain' }} />
+          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 15, color: ACCENT, letterSpacing: 0.5 }}>
+            {PRODUCT_NAME_UPPER}
+          </span>
+        </div>
+      </div>
+      <div style={{ height: 3, background: '#E8E8E5' }}>
+        <div style={{ height: 3, width: `${progress}%`, background: ACCENT, borderRadius: '0 2px 2px 0', transition: 'width 0.4s ease' }} />
+      </div>
+    </div>
+  )
+}
+
+function QuestionView({ step, selected, onSelect, onContinue }: {
+  step: QuestionStep
+  selected: string[]
+  onSelect: (o: string) => void
+  onContinue: () => void
+}) {
+  const hasSelection = selected.length > 0
+  return (
+    <div style={{ padding: '24px 18px 32px', display: 'flex', flexDirection: 'column', gap: 0 }}>
+      <p style={{ fontSize: 11, fontWeight: 600, color: ACCENT, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+        {step.label}
+      </p>
+      <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 22, color: DARK, lineHeight: 1.2, marginBottom: 22 }}>
+        {step.question}
+      </h2>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {step.options.map(opt => {
+          const isSel = selected.includes(opt)
+          return (
+            <button
+              key={opt}
+              onClick={() => onSelect(opt)}
+              style={{
+                width: '100%',
+                textAlign: 'left',
+                padding: '14px 14px',
+                border: isSel ? `2px solid ${ACCENT}` : `1.5px solid ${BORDER}`,
+                borderRadius: 10,
+                background: isSel ? ACCENT_LIGHT : WHITE,
+                cursor: 'pointer',
+                fontFamily: "'Barlow', sans-serif",
+                fontSize: 14,
+                color: isSel ? ACCENT_TEXT : DARK,
+                fontWeight: isSel ? 600 : 400,
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                lineHeight: 1.4,
+                transition: 'all 0.15s ease',
+              }}
+            >
+              {opt}
+              {isSel && (
+                <span style={{ marginLeft: 8, flexShrink: 0, width: 20, height: 20, borderRadius: '50%', background: ACCENT, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="11" height="8" viewBox="0 0 11 8" fill="none">
+                    <path d="M1 4L4 7L10 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </span>
+              )}
+            </button>
+          )
+        })}
+      </div>
+      {step.multi && hasSelection && (
+        <button
+          onClick={onContinue}
+          style={{
+            marginTop: 20,
+            width: '100%',
+            padding: '15px',
+            background: ACCENT,
+            color: WHITE,
+            border: 'none',
+            borderRadius: 10,
+            fontFamily: "'Barlow', sans-serif",
+            fontSize: 16,
+            fontWeight: 600,
+            cursor: 'pointer',
+            letterSpacing: 0.2,
+          }}
+        >
+          Continuar →
+        </button>
+      )}
+    </div>
+  )
+}
+
+function TestimonialCarousel({ images }: { images: string[] }) {
+  const [idx, setIdx] = useState(0)
+  const startX = useRef<number | null>(null)
+  const total = images.length
+
+  function go(n: number) {
+    setIdx(prev => Math.max(0, Math.min(total - 1, prev + n)))
+  }
+
+  function onTouchStart(e: TouchEvent<HTMLDivElement>) {
+    startX.current = e.touches[0].clientX
+  }
+  function onTouchEnd(e: TouchEvent<HTMLDivElement>) {
+    if (startX.current === null) return
+    const dx = e.changedTouches[0].clientX - startX.current
+    if (dx < -40) go(1)
+    else if (dx > 40) go(-1)
+    startX.current = null
+  }
+
+  return (
+    <div>
+      <div
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+        style={{ overflow: 'hidden', borderRadius: 14, border: `1px solid ${BORDER}`, background: '#F9F9F7' }}
+      >
+        <div style={{ display: 'flex', transform: `translateX(-${idx * 100}%)`, transition: 'transform 0.3s cubic-bezier(0.16,1,0.3,1)' }}>
+          {images.map((src, i) => (
+            <div key={i} style={{ minWidth: '100%' }}>
+              <img src={src} alt={`Depoimento ${i + 1}`} loading="lazy" style={{ width: '100%', height: 'auto', display: 'block' }} />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 }}>
+        <button
+          onClick={() => go(-1)}
+          disabled={idx === 0}
+          aria-label="Depoimento anterior"
+          style={{ width: 40, height: 40, borderRadius: '50%', border: `1.5px solid ${BORDER}`, background: WHITE, cursor: idx === 0 ? 'default' : 'pointer', opacity: idx === 0 ? 0.35 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'opacity 0.2s ease' }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke={DARK} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        </button>
+
+        <div style={{ display: 'flex', gap: 6 }}>
+          {images.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setIdx(i)}
+              aria-label={`Ir para depoimento ${i + 1}`}
+              style={{ width: i === idx ? 22 : 8, height: 8, borderRadius: 4, border: 'none', background: i === idx ? ACCENT : BORDER, cursor: 'pointer', padding: 0, transition: 'width 0.25s ease, background 0.25s ease' }}
+            />
+          ))}
+        </div>
+
+        <button
+          onClick={() => go(1)}
+          disabled={idx === total - 1}
+          aria-label="Próximo depoimento"
+          style={{ width: 40, height: 40, borderRadius: '50%', border: `1.5px solid ${BORDER}`, background: WHITE, cursor: idx === total - 1 ? 'default' : 'pointer', opacity: idx === total - 1 ? 0.35 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'opacity 0.2s ease' }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke={DARK} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function TestimonialView({ step, onContinue }: { step: TestimonialStep; onContinue: () => void }) {
+  return (
+    <div style={{ padding: '32px 18px 32px' }}>
+      <p style={{ fontSize: 11, fontWeight: 600, color: ACCENT, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+        {step.label}
+      </p>
+      <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 22, color: DARK, lineHeight: 1.2, marginBottom: 18 }}>
+        {step.title}
+      </h2>
+      <TestimonialCarousel images={step.images} />
+      <button
+        onClick={onContinue}
+        style={{ marginTop: 24, width: '100%', padding: 15, background: ACCENT, color: WHITE, border: 'none', borderRadius: 10, fontFamily: "'Barlow', sans-serif", fontSize: 16, fontWeight: 600, cursor: 'pointer' }}
+      >
+        {step.cta}
+      </button>
+    </div>
+  )
+}
+
+function BreakView({ step, onContinue }: { step: BreakStep; onContinue: () => void }) {
+  return (
+    <div style={{ padding: '32px 18px 32px' }}>
+      <div style={{ width: 48, height: 48, borderRadius: 10, background: ACCENT_LIGHT, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" stroke={ACCENT} strokeWidth="2" />
+          <path d="M12 8v4M12 16h.01" stroke={ACCENT} strokeWidth="2" strokeLinecap="round" />
+        </svg>
+      </div>
+      <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 22, color: DARK, lineHeight: 1.2, marginBottom: 16 }}>
+        {step.title}
+      </h2>
+      {step.body.map((p, i) => (
+        <p key={i} style={{ fontSize: 14, color: MUTED, lineHeight: 1.7, marginBottom: i < step.body.length - 1 ? 12 : 24 }}>
+          {p}
+        </p>
+      ))}
+      <button
+        onClick={onContinue}
+        style={{ width: '100%', padding: 15, background: ACCENT, color: WHITE, border: 'none', borderRadius: 10, fontFamily: "'Barlow', sans-serif", fontSize: 16, fontWeight: 600, cursor: 'pointer' }}
+      >
+        {step.cta}
+      </button>
+    </div>
+  )
+}
+
+function VSLView({ step, onComplete }: { step: VSLStep; onComplete: () => void }) {
+  const [slide, setSlide] = useState(0)
+  const total = step.slides.length
+  const current = step.slides[slide]
+  const isLast = slide === total - 1
+
+  return (
+    <div style={{ padding: '32px 18px 32px' }}>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 24 }}>
+        {step.slides.map((_, i) => (
+          <div key={i} style={{ flex: 1, height: 3, borderRadius: 2, background: i <= slide ? ACCENT : BORDER, transition: 'background 0.3s' }} />
+        ))}
+      </div>
+      <p style={{ fontSize: 11, fontWeight: 600, color: ACCENT, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+        Entenda o mecanismo
+      </p>
+      <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 22, color: DARK, lineHeight: 1.2, marginBottom: 18 }}>
+        {current.title}
+      </h2>
+      <p style={{ fontSize: 15, color: MUTED, lineHeight: 1.75, marginBottom: 32 }}>
+        {current.body}
+      </p>
+      <button
+        onClick={() => isLast ? onComplete() : setSlide(s => s + 1)}
+        style={{ width: '100%', padding: 15, background: ACCENT, color: WHITE, border: 'none', borderRadius: 10, fontFamily: "'Barlow', sans-serif", fontSize: 16, fontWeight: 600, cursor: 'pointer' }}
+      >
+        {isLast ? 'Ver meu diagnóstico →' : 'Próximo →'}
+      </button>
+    </div>
+  )
+}
+
+const LOADING_MSGS = [
+  'Analisando suas respostas...',
+  'Calculando nível de Colapso de Ativação Lombar...',
+  'Montando diagnóstico personalizado...',
+]
+
+function LoadingView({ onComplete }: { onComplete: () => void }) {
+  const [progress, setProgress] = useState(0)
+  const [msgIdx, setMsgIdx] = useState(0)
+
+  useEffect(() => {
+    let p = 0
+    const iv = setInterval(() => {
+      p += 1.5
+      setProgress(Math.min(100, Math.round(p)))
+      if (p >= 30 && p < 32) setMsgIdx(1)
+      if (p >= 65 && p < 67) setMsgIdx(2)
+      if (p >= 100) { clearInterval(iv); setTimeout(onComplete, 600) }
+    }, 45)
+    return () => clearInterval(iv)
+  }, [onComplete])
+
+  return (
+    <div style={{ minHeight: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 18px' }}>
+      <img src="/icon.png" alt="" style={{ width: 64, height: 'auto', marginBottom: 32, opacity: 0.9 }} />
+      <div style={{ width: '100%', height: 6, background: BORDER, borderRadius: 3, marginBottom: 20, overflow: 'hidden' }}>
+        <div style={{ height: 6, width: `${progress}%`, background: ACCENT, borderRadius: 3, transition: 'width 0.2s ease' }} />
+      </div>
+      <p style={{ fontSize: 15, color: DARK, textAlign: 'center', fontWeight: 500, minHeight: 48, transition: 'opacity 0.3s' }}>
+        {LOADING_MSGS[msgIdx]}
+      </p>
+      <p style={{ marginTop: 8, fontSize: 13, color: MUTED }}>{progress}%</p>
+    </div>
+  )
+}
+
+function ResultView({ answers }: { answers: Record<string, string | string[]> }) {
+  const intensidade = (answers['intensidade'] as string) || ''
+  const produtividade = (answers['produtividade'] as string) || ''
+  const horas = (answers['horas_sentado'] as string) || 'várias horas'
+  const tempoDor = (answers['tempo_dor'] as string) || ''
+
+  const isAvancado =
+    intensidade.includes('Forte') ||
+    intensidade.includes('incapacitante') ||
+    produtividade.includes('Impacta diretamente')
+
+  const nivel = isAvancado ? 'AVANÇADO' : 'MODERADO-AVANÇADO'
+  const nivelColor = isAvancado ? '#C0392B' : '#D97706'
+
+  return (
+    <div style={{ background: WHITE }}>
+      {/* Hero */}
+      <div style={{ background: DARK, padding: '28px 18px 24px', textAlign: 'center' }}>
+        <img src="/icon.png" alt="" style={{ width: 52, height: 'auto', marginBottom: 16 }} />
+        <p style={{ fontSize: 11, fontWeight: 600, color: ACCENT, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>
+          Diagnóstico concluído
+        </p>
+        <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 28, color: WHITE, lineHeight: 1.15, marginBottom: 16 }}>
+          Seu nível de Colapso de Ativação Lombar está identificado
+        </h1>
+        <div style={{ display: 'inline-block', background: nivelColor, color: WHITE, fontWeight: 700, fontSize: 15, padding: '6px 18px', borderRadius: 20, letterSpacing: 0.5 }}>
+          {nivel}
+        </div>
+      </div>
+
+      {/* Diagnóstico personalizado */}
+      <div style={{ padding: '24px 18px', borderBottom: `1px solid ${BORDER}` }}>
+        <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 20, color: DARK, marginBottom: 12 }}>
+          O que isso significa para você
+        </h2>
+        <p style={{ fontSize: 14, color: MUTED, lineHeight: 1.7, marginBottom: 10 }}>
+          Com <strong style={{ color: DARK }}>{horas}</strong> sentado por dia
+          {tempoDor ? ` e convivendo com dor lombar há ${tempoDor.toLowerCase()}` : ''}, seus
+          estabilizadores lombares estão em modo de hibernação crônica.
+        </p>
+        <p style={{ fontSize: 14, color: MUTED, lineHeight: 1.7 }}>
+          Isso não vai melhorar sozinho. Cada hora sentado reinicia o ciclo. A boa notícia é que o Colapso de Ativação Lombar tem solução — e ela leva 8 minutos por dia.
+        </p>
+      </div>
+
+      {/* Produto */}
+      <div style={{ padding: '24px 18px', borderBottom: `1px solid ${BORDER}` }}>
+        <p style={{ fontSize: 11, fontWeight: 600, color: ACCENT, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+          Seu protocolo está pronto
+        </p>
+        <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 22, color: DARK, lineHeight: 1.2, marginBottom: 18 }}>
+          {PRODUCT_NAME}
+        </h2>
+
+        {[
+          { title: `Protocolo ${PRODUCT_NAME} em vídeo`, desc: '8 minutos de exercícios guiados que reativam os estabilizadores na sequência correta. Sem equipamento, sem sair do trabalho.', price: 'R$97' },
+          { title: 'Guia de Ergonomia Express', desc: 'PDF com os ajustes de cadeira, monitor e postura que reduzem a pressão lombar em até 60% durante o expediente.', price: 'R$37' },
+          { title: 'Protocolo de Emergência', desc: '3 movimentos para aplicar no momento da crise, sem sair da cadeira. Alívio em menos de 3 minutos.', price: 'R$27' },
+        ].map((item, i) => (
+          <div key={i} style={{ display: 'flex', gap: 12, marginBottom: 16, padding: '14px', background: '#F9F9F7', borderRadius: 10, border: `1px solid ${BORDER}` }}>
+            <div style={{ width: 22, height: 22, borderRadius: '50%', background: ACCENT, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 2 }}>
+              <svg width="11" height="8" viewBox="0 0 11 8" fill="none">
+                <path d="M1 4L4 7L10 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+            <div style={{ flex: 1 }}>
+              <p style={{ fontSize: 13, fontWeight: 600, color: DARK, marginBottom: 4 }}>{item.title}</p>
+              <p style={{ fontSize: 12, color: MUTED, lineHeight: 1.6, marginBottom: 4 }}>{item.desc}</p>
+              <p style={{ fontSize: 11, color: MUTED, textDecoration: 'line-through' }}>Valor: {item.price}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Prova social */}
+      <div style={{ padding: '24px 18px', borderBottom: `1px solid ${BORDER}` }}>
+        <p style={{ fontSize: 11, fontWeight: 600, color: ACCENT, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+          O que estão dizendo
+        </p>
+        <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 20, color: DARK, lineHeight: 1.2, marginBottom: 18 }}>
+          Você não está sozinho nessa
+        </h2>
+        <TestimonialCarousel images={['/depoimentos/depo-03.webp', '/depoimentos/depo-04.webp']} />
+      </div>
+
+      {/* Preço */}
+      <div style={{ padding: '24px 18px 32px', textAlign: 'center' }}>
+        <p style={{ fontSize: 13, color: MUTED, marginBottom: 4 }}>
+          Tudo isso de <span style={{ textDecoration: 'line-through' }}>R$161</span> por
+        </p>
+        <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 48, color: DARK, lineHeight: 1, marginBottom: 4 }}>
+          R$37
+        </p>
+        <p style={{ fontSize: 12, color: MUTED, marginBottom: 24 }}>
+          Acesso imediato logo após o pagamento
+        </p>
+
+        <a
+          href={CHECKOUT_URL}
+          style={{ display: 'block', width: '100%', padding: '17px 0', background: ACCENT, color: WHITE, borderRadius: 10, textDecoration: 'none', fontFamily: "'Barlow', sans-serif", fontSize: 17, fontWeight: 700, textAlign: 'center', letterSpacing: 0.3 }}
+        >
+          Quero meu protocolo por R$37 →
+        </a>
+
+        <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="11" width="18" height="11" rx="2" stroke={MUTED} strokeWidth="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke={MUTED} strokeWidth="2" strokeLinecap="round" />
+          </svg>
+          <p style={{ fontSize: 12, color: MUTED }}>Pagamento seguro · Acesso imediato · Garantia de 7 dias</p>
+        </div>
+
+        {/* Garantia */}
+        <div style={{ marginTop: 20, padding: '16px', border: `1.5px dashed ${BORDER}`, borderRadius: 10, textAlign: 'left' }}>
+          <p style={{ fontSize: 13, fontWeight: 600, color: DARK, marginBottom: 6 }}>Garantia de 7 dias</p>
+          <p style={{ fontSize: 12, color: MUTED, lineHeight: 1.6 }}>
+            Se você aplicar o protocolo por 7 dias e não sentir nenhuma diferença, devolvemos 100% do valor. Sem perguntas.
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── APP PRINCIPAL ─────────────────────────────────────────────────
+export default function App() {
+  const [stepIdx, setStepIdx] = useState(0)
+  const [answers, setAnswers] = useState<Record<string, string | string[]>>({})
+  const [selected, setSelected] = useState<string[]>([])
+  const [fading, setFading] = useState(false)
+  const topRef = useRef<HTMLDivElement>(null)
+
+  const step = STEPS[stepIdx]
+
+  useEffect(() => {
+    setSelected([])
+    topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [stepIdx])
+
+  function advance() {
+    setFading(true)
+    setTimeout(() => {
+      setStepIdx(i => i + 1)
+      setFading(false)
+    }, 200)
+  }
+
+  function goBack() {
+    if (stepIdx === 0) return
+    setFading(true)
+    setTimeout(() => {
+      setStepIdx(i => i - 1)
+      setFading(false)
+    }, 150)
+  }
+
+  function handleSelect(opt: string) {
+    if (step.type !== 'question') return
+    const isMulti = step.multi
+
+    if (isMulti) {
+      if (opt === 'Nada até agora') {
+        setSelected(['Nada até agora'])
+      } else {
+        setSelected(prev => {
+          const without = prev.filter(o => o !== 'Nada até agora')
+          return prev.includes(opt) ? without.filter(o => o !== opt) : [...without, opt]
+        })
+      }
+    } else {
+      setSelected([opt])
+      setAnswers(a => ({ ...a, [step.id]: opt }))
+      setTimeout(advance, 350)
+    }
+  }
+
+  function handleContinue() {
+    if (step.type === 'question') {
+      setAnswers(a => ({ ...a, [step.id]: selected.length === 1 ? selected[0] : selected }))
+    }
+    advance()
+  }
+
+  return (
+    <div style={{ minHeight: '100%', background: PAGE_BG, display: 'flex', justifyContent: 'center' }}>
+      <div
+        ref={topRef}
+        style={{
+          width: '100%',
+          maxWidth: 480,
+          minHeight: '100vh',
+          background: WHITE,
+          display: 'flex',
+          flexDirection: 'column',
+          opacity: fading ? 0 : 1,
+          transition: 'opacity 0.18s ease',
+          position: 'relative',
+        }}
+      >
+        <Header step={step} stepIdx={stepIdx} />
+
+        <div style={{ flex: 1 }}>
+          {step.type === 'question' && (
+            <QuestionView step={step} selected={selected} onSelect={handleSelect} onContinue={handleContinue} />
+          )}
+          {step.type === 'break' && (
+            <BreakView step={step} onContinue={advance} />
+          )}
+          {step.type === 'vsl' && (
+            <VSLView step={step} onComplete={advance} />
+          )}
+          {step.type === 'testimonial' && (
+            <TestimonialView step={step} onContinue={advance} />
+          )}
+          {step.type === 'loading' && (
+            <LoadingView onComplete={advance} />
+          )}
+          {step.type === 'result' && (
+            <ResultView answers={answers} />
+          )}
+        </div>
+
+        {step.type === 'question' && stepIdx > 0 && (
+          <button
+            onClick={goBack}
+            style={{ background: 'none', border: 'none', borderTop: `1px solid ${BORDER}`, color: MUTED, fontSize: 13, fontFamily: "'Barlow', sans-serif", cursor: 'pointer', padding: '12px 18px', textAlign: 'left' }}
+          >
+            ← Voltar
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
