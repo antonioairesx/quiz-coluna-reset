@@ -529,7 +529,7 @@ function ResultView({ answers }: { answers: Record<string, string | string[]> })
           Tudo isso de <span style={{ textDecoration: 'line-through' }}>R$161</span> por
         </p>
         <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 48, color: DARK, lineHeight: 1, marginBottom: 4 }}>
-          R$47
+          R$37
         </p>
         <p style={{ fontSize: 12, color: MUTED, marginBottom: 24 }}>
           Acesso imediato logo após o pagamento
@@ -539,7 +539,7 @@ function ResultView({ answers }: { answers: Record<string, string | string[]> })
           href={CHECKOUT_URL}
           style={{ display: 'block', width: '100%', padding: '17px 0', background: ACCENT, color: WHITE, borderRadius: 10, textDecoration: 'none', fontFamily: "'Barlow', sans-serif", fontSize: 17, fontWeight: 700, textAlign: 'center', letterSpacing: 0.3 }}
         >
-          Quero meu protocolo por R$47 →
+          Quero meu protocolo por R$37 →
         </a>
 
         <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
