@@ -494,22 +494,20 @@ function BreakView({ step, onContinue }: { step: BreakStep; onContinue: () => vo
 
       {step.expert && (
         <div style={{ marginBottom: 24, paddingTop: 20, borderTop: `1px solid ${BORDER}` }}>
-          <div style={{ display: 'flex', gap: 14, alignItems: 'center', marginBottom: 16 }}>
+          <div style={{ borderRadius: 14, overflow: 'hidden', border: `1px solid ${BORDER}`, marginBottom: 16 }}>
             <img
               src={step.expert.photo}
               alt={step.expert.name}
               loading="lazy"
-              style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', objectPosition: 'top center', flexShrink: 0, border: `2px solid ${BORDER}` }}
+              style={{ width: '100%', height: 'auto', display: 'block' }}
             />
-            <div>
-              <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 20, color: DARK, lineHeight: 1.1, marginBottom: 2 }}>
-                {step.expert.name}
-              </p>
-              <p style={{ fontSize: 12, fontWeight: 600, color: ACCENT_TEXT }}>
-                {step.expert.role}
-              </p>
-            </div>
           </div>
+          <p style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 26, color: DARK, lineHeight: 1.1, marginBottom: 4 }}>
+            {step.expert.name}
+          </p>
+          <p style={{ fontSize: 13, fontWeight: 600, color: ACCENT_TEXT, marginBottom: 18 }}>
+            {step.expert.role}
+          </p>
           {step.expert.bio.map((p, i) => (
             <p key={i} style={{ fontSize: 14, color: MUTED, lineHeight: 1.7, marginBottom: i < step.expert!.bio.length - 1 ? 12 : 0 }}>
               {p}
