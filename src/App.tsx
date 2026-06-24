@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, type TouchEvent } from 'react'
+import { startQuizSession, trackAnswer, completeQuizSession } from './lib/quizTracker'
 
 // ─── CONFIG (muda só aqui entre os dois deploys) ───────────────────
 const PRODUCT_NAME = 'Coluna Reset'
@@ -729,11 +730,24 @@ export default function App() {
   const step = STEPS[stepIdx]
 
   useEffect(() => {
+    startQuizSession()
+  }, [])
+
+  useEffect(() => {
     setSelected([])
     topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }, [stepIdx])
 
   function advance() {
+    const current = STEPS[stepIdx]
+    if (current.type === 'question') {
+      const resp = answers[current.id] ?? selected
+      const respText = Array.isArray(resp) ? resp.join(', ') : String(resp ?? '')
+      trackAnswer(stepIdx + 1, current.question, respText)
+    }
+    if (STEPS[stepIdx + 1]?.type === 'result') {
+      completeQuizSession()
+    }
     setFading(true)
     setTimeout(() => {
       setStepIdx(i => i + 1)
