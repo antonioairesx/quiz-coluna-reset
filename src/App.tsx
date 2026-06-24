@@ -738,12 +738,10 @@ export default function App() {
     topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }, [stepIdx])
 
-  function advance() {
+  function advance(answeredText?: string) {
     const current = STEPS[stepIdx]
-    if (current.type === 'question') {
-      const resp = answers[current.id] ?? selected
-      const respText = Array.isArray(resp) ? resp.join(', ') : String(resp ?? '')
-      trackAnswer(stepIdx + 1, current.question, respText)
+    if (current.type === 'question' && answeredText !== undefined) {
+      trackAnswer(stepIdx + 1, current.question, answeredText)
     }
     if (STEPS[stepIdx + 1]?.type === 'result') {
       completeQuizSession()
@@ -780,15 +778,17 @@ export default function App() {
     } else {
       setSelected([opt])
       setAnswers(a => ({ ...a, [step.id]: opt }))
-      setTimeout(advance, 350)
+      setTimeout(() => advance(opt), 350)
     }
   }
 
   function handleContinue() {
     if (step.type === 'question') {
       setAnswers(a => ({ ...a, [step.id]: selected.length === 1 ? selected[0] : selected }))
+      advance(selected.join(', '))
+    } else {
+      advance()
     }
-    advance()
   }
 
   return (
