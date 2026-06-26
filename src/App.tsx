@@ -21,9 +21,32 @@ type QuestionStep = {
   type: 'question'
   id: string
   label: string
+  intro?: string
   question: string
   options: string[]
   multi?: boolean
+}
+type IntroStep = {
+  type: 'intro'
+  headline: string
+  paren?: string
+  sub: string
+  cta: string
+  scarcity: string
+  image?: string
+}
+type NameStep = {
+  type: 'name'
+  title: string
+  placeholder: string
+  cta: string
+}
+type ReflectionStep = {
+  type: 'reflection'
+  body: string[]
+  highlight?: string
+  cta: string
+  image?: string
 }
 type BreakStep = {
   type: 'break'
@@ -50,34 +73,88 @@ type TestimonialStep = {
 }
 type LoadingStep = { type: 'loading' }
 type ResultStep = { type: 'result' }
-type Step = QuestionStep | BreakStep | VSLStep | TestimonialStep | LoadingStep | ResultStep
+type Step =
+  | QuestionStep
+  | IntroStep
+  | NameStep
+  | ReflectionStep
+  | BreakStep
+  | VSLStep
+  | TestimonialStep
+  | LoadingStep
+  | ResultStep
+
+// ─── INTERPOLAÇÃO DE PERSONALIZAÇÃO ───────────────────────────────
+function interpolate(text: string, answers: Record<string, string | string[]>): string {
+  const nome = (answers['nome'] as string)?.trim() || 'você'
+  return text
+    .replace(/\{nome\}/g, nome)
+    .replace(/\[(\w+)\]/g, (_, key) => {
+      const v = answers[key]
+      const s = Array.isArray(v) ? v.join(', ') : (v || '')
+      return s.toLowerCase()
+    })
+}
 
 // ─── STEPS ────────────────────────────────────────────────────────
 const STEPS: Step[] = [
+  // ENTRADA
+  {
+    type: 'intro',
+    headline: 'Em 2 minutos você descobre o que realmente está por trás da sua dor lombar.',
+    paren: 'Não é postura. Não é colchão. Não é idade.',
+    sub: 'Responda algumas perguntas e receba o diagnóstico do seu padrão de Colapso de Ativação Lombar, montado a partir das suas respostas.',
+    cta: 'Quero meu diagnóstico',
+    scarcity: 'Leva 2 minutos. Só dá pra responder uma vez.',
+    image: '/quiz/entrada.webp',
+  },
+
   // BLOCO A — Situacionais
   {
     type: 'question', id: 'sexo', label: 'Sobre você',
-    question: 'Qual é o seu sexo?',
-    options: ['Masculino', 'Feminino'],
+    intro: 'Vamos montar seu diagnóstico do zero. Primeiro, o básico:',
+    question: 'Você é...',
+    options: ['Homem', 'Mulher'],
   },
   {
     type: 'question', id: 'idade', label: 'Sobre você',
-    question: 'Qual é a sua faixa etária?',
+    intro: 'Sua idade muda como a lombar reage ao tempo sentado.',
+    question: 'Em qual faixa você está?',
     options: ['25 a 35 anos', '36 a 45 anos', '46 a 55 anos', 'Acima de 55 anos'],
+  },
+  // CAPTURA DE NOME
+  {
+    type: 'name',
+    title: 'Quase lá. Como você quer que eu te chame no seu diagnóstico?',
+    placeholder: 'Seu primeiro nome',
+    cta: 'Continuar',
   },
   {
     type: 'question', id: 'horas_sentado', label: 'Sua rotina',
-    question: 'Quantas horas por dia você fica sentado trabalhando?',
+    intro: '{nome}, agora a pergunta que mais pesa no seu caso:',
+    question: 'Quantas horas por dia você passa sentado trabalhando?',
     options: ['Menos de 4 horas', 'De 4 a 6 horas', 'De 6 a 8 horas', 'Mais de 8 horas'],
   },
   {
     type: 'question', id: 'tempo_dor', label: 'Sua dor',
-    question: 'Há quanto tempo você convive com dor nas costas?',
+    intro: 'Tempo de exposição muda tudo no diagnóstico.',
+    question: 'Há quanto tempo a dor virou parte da sua rotina?',
     options: ['Menos de 6 meses', 'De 6 meses a 2 anos', 'De 2 a 5 anos', 'Mais de 5 anos'],
+  },
+  // REFLEXO 1
+  {
+    type: 'reflection',
+    body: [
+      '{nome}, isso já diz muito.',
+      'Não é coincidência nem azar. É o tempo parado mantendo seus estabilizadores lombares desligados, dia após dia. A boa notícia: isso tem nome, tem causa e tem solução. Continue que eu te mostro.',
+    ],
+    highlight: '[horas_sentado] sentado por dia, e uma dor que já te acompanha há [tempo_dor].',
+    cta: 'Continuar',
   },
   {
     type: 'question', id: 'tentou_antes', label: 'Histórico',
-    question: 'Você já tentou resolver a dor nas costas antes?',
+    intro: 'Quero entender seu histórico antes de te dar o caminho certo.',
+    question: 'Antes de hoje, você já tentou resolver isso?',
     options: [
       'Sim, mas não funcionou',
       'Sim, melhorou mas a dor voltou',
@@ -87,11 +164,11 @@ const STEPS: Step[] = [
   // BREAK 1
   {
     type: 'break',
-    title: 'Por que as soluções comuns não resolvem?',
+    title: '{nome}, por que tudo que você tentou falhou (e não é culpa sua)',
     body: [
-      'A maioria das pessoas com dor nas costas tentam alongamento, academia ou fisioterapia. Algumas melhoram por um tempo. Mas a dor volta.',
-      'O motivo não é falta de esforço. É que essas abordagens atacam o sintoma, não a causa real.',
-      'Continue respondendo para descobrir o que está realmente causando a sua dor e como reverter isso.',
+      'A maioria das pessoas com dor nas costas tenta alongamento, academia ou fisioterapia. Algumas melhoram por um tempo. Mas a dor sempre volta.',
+      'O motivo não é falta de esforço. É que tudo isso ataca o sintoma e ignora a causa real: a desativação dos músculos que sustentam a sua coluna.',
+      'Continue respondendo pra eu te mostrar exatamente o que está acontecendo na sua lombar, e como reverter.',
     ],
     cta: 'Entendi, continuar',
     expert: {
@@ -107,13 +184,15 @@ const STEPS: Step[] = [
   // BLOCO B — Problema
   {
     type: 'question', id: 'o_que_tentou', label: 'O que você tentou',
+    intro: 'Marque tudo que você já tentou. Vou cruzar com o seu padrão.',
     question: 'O que você já tentou para resolver a dor? (pode marcar mais de uma)',
     options: ['Alongamento em casa', 'Academia', 'Fisioterapia', 'Remédio para dor', 'Nada até agora'],
     multi: true,
   },
   {
     type: 'question', id: 'resultado_tentativas', label: 'Resultado',
-    question: 'Qual foi o resultado dessas tentativas?',
+    intro: 'E sinceramente, o que sobrou de tudo isso?',
+    question: 'Qual foi o resultado real dessas tentativas?',
     options: [
       'Funcionou por um tempo, depois a dor voltou',
       'Não resolveu nada',
@@ -123,7 +202,8 @@ const STEPS: Step[] = [
   },
   {
     type: 'question', id: 'onde_dor', label: 'Localização',
-    question: 'Onde você sente a dor com mais frequência?',
+    intro: 'Onde a dor mora revela qual estabilizador desligou primeiro.',
+    question: 'Onde você sente com mais força?',
     options: [
       'Lombar baixa (região do cinto)',
       'Lombar e glúteo',
@@ -133,7 +213,8 @@ const STEPS: Step[] = [
   },
   {
     type: 'question', id: 'quando_dor', label: 'Timing',
-    question: 'Em que momento do dia a dor costuma ser mais forte?',
+    intro: 'O horário da dor é uma das pistas mais importantes.',
+    question: 'Em que momento do dia ela aperta mais?',
     options: [
       'Ao acordar',
       'Depois de horas sentado',
@@ -143,7 +224,8 @@ const STEPS: Step[] = [
   },
   {
     type: 'question', id: 'intensidade', label: 'Intensidade',
-    question: 'Como você descreveria a dor nos dias mais difíceis?',
+    intro: 'Sem suavizar. Nos dias ruins, como é de verdade?',
+    question: 'Como você descreveria a dor nos piores dias?',
     options: [
       'Incômoda mas suportável',
       'Moderada, atrapalha minha concentração',
@@ -153,12 +235,14 @@ const STEPS: Step[] = [
   },
   {
     type: 'question', id: 'se_levanta', label: 'Comportamento',
-    question: 'Você costuma precisar se levantar para aliviar a dor durante o trabalho?',
+    intro: 'Aquele momento em que você precisa levantar só pra aliviar...',
+    question: 'Você precisa se levantar pra dar uma trégua à dor durante o trabalho?',
     options: ['Não', 'Às vezes sim', 'Com frequência', 'Quase o tempo todo'],
   },
   {
     type: 'question', id: 'produtividade', label: 'Impacto no trabalho',
-    question: 'A dor afeta sua produtividade?',
+    intro: 'A dor não cobra só nas costas. Ela cobra no seu rendimento.',
+    question: 'Ela afeta sua produtividade?',
     options: [
       'Não',
       'Às vezes perco o foco',
@@ -168,13 +252,25 @@ const STEPS: Step[] = [
   },
   {
     type: 'question', id: 'vida_pessoal', label: 'Impacto pessoal',
-    question: 'A dor acompanha você fora do trabalho?',
+    intro: 'E quando o expediente acaba, ela vai embora?',
+    question: 'A dor acompanha você pra fora do trabalho?',
     options: [
       'Não',
       'Um pouco',
       'Chego em casa cansado e doendo',
       'Compromete meu tempo com a família',
     ],
+  },
+  // REFLEXO 2 (pico emocional)
+  {
+    type: 'reflection',
+    body: [
+      '{nome}, deixa eu te falar uma coisa.',
+      'A dor que começa na cadeira não termina nela. Ela rouba seu foco, sua paciência, seu tempo com quem você ama. E não melhora sozinha: cada dia sentado reinicia o ciclo do zero.',
+      'Mas existe uma forma de quebrar isso em 8 minutos por dia. Vou te mostrar agora como funciona.',
+    ],
+    cta: 'Quero entender',
+    image: '/quiz/reflexo.webp',
   },
   // MINI VSL
   {
@@ -186,63 +282,81 @@ const STEPS: Step[] = [
       },
       {
         title: 'O que acontece depois de 2h sentado',
-        body: 'Esses músculos entram em modo de hibernação. Eles param de trabalhar ativamente. Isso é o Colapso de Ativação Lombar — e é o que está causando sua dor.',
+        body: 'Esses músculos entram em modo de hibernação. Eles param de trabalhar ativamente. Isso é o Colapso de Ativação Lombar, e é o que está causando sua dor.',
       },
       {
         title: 'Por que o alongamento falha',
-        body: 'Alongar um músculo hibernado é como espremer um pano seco — você pode esticar, mas ele não volta a funcionar. O alívio dura minutos. Depois a dor volta.',
+        body: 'Alongar um músculo hibernado é como espremer um pano seco: você pode esticar, mas ele não volta a funcionar. O alívio dura minutos. Depois a dor volta.',
       },
       {
         title: `O que o ${PRODUCT_NAME} faz`,
-        body: `O ${PRODUCT_NAME} usa uma sequência específica: ativa os estabilizadores profundos primeiro, depois os superficiais. Em 8 minutos, o Colapso é revertido e a coluna recupera suporte real.`,
+        body: `{nome}, o ${PRODUCT_NAME} usa uma sequência específica: ativa os estabilizadores profundos primeiro, depois os superficiais. Em 8 minutos, o Colapso é revertido e a coluna recupera suporte real.`,
       },
     ],
   },
   // BLOCO C — Implicação
   {
     type: 'question', id: 'frequencia_pensamento', label: 'Impacto mental',
+    intro: 'Quero medir o quanto isso ocupa a sua cabeça.',
     question: 'Com que frequência você pensa na dor durante o expediente?',
     options: ['Raramente', 'Algumas vezes por dia', 'Frequentemente', 'O tempo todo'],
   },
   {
     type: 'question', id: 'humor', label: 'Impacto emocional',
-    question: 'A dor já afetou seu humor ou sua paciência com pessoas próximas?',
+    intro: 'Essa é difícil de admitir, mas importa muito:',
+    question: 'A dor já mexeu com seu humor ou sua paciência com quem está perto?',
     options: ['Não', 'Raramente', 'Às vezes sim', 'Com frequência'],
   },
   {
     type: 'question', id: 'deixou_de_fazer', label: 'Limitações',
-    question: 'Você já deixou de fazer algo que gostava por causa da dor?',
+    intro: 'Pensa nas coisas que você gosta de fazer.',
+    question: 'Você já abriu mão de algo por causa da dor?',
     options: ['Nunca', 'Raramente', 'Algumas vezes', 'Com frequência'],
   },
   {
     type: 'question', id: 'preocupacao_futuro', label: 'Perspectiva',
-    question: 'Você se preocupa com como sua lombar vai estar daqui a 5 ou 10 anos?',
+    intro: 'Agora olha pra frente.',
+    question: 'Você se preocupa com como sua lombar vai estar em 5 ou 10 anos?',
     options: ['Não pensei nisso', 'Um pouco', 'Sim, me preocupa', 'Muito, tenho medo de piorar'],
   },
   {
     type: 'question', id: 'rotina_2_anos', label: 'Projeção',
-    question: 'Se você não resolver isso, como imagina sua rotina daqui a 2 anos?',
+    intro: 'Seja honesto com você mesmo:',
+    question: 'Se nada mudar, como você imagina sua rotina daqui a 2 anos?',
     options: ['Igual a hoje', 'Um pouco pior', 'Significativamente pior', 'Não quero nem pensar'],
+  },
+  // REFLEXO 3 (future pacing + virada)
+  {
+    type: 'reflection',
+    body: [
+      '{nome}, você acabou de admitir pra você mesmo onde isso pode chegar.',
+      'A diferença é que esse futuro ainda não está fechado. Faltam poucas perguntas pra eu montar o protocolo exato que muda essa trajetória.',
+    ],
+    cta: 'Continuar',
   },
   // BLOCO D — Pré-comprometimento
   {
     type: 'question', id: 'faria_protocolo', label: 'Comprometimento',
-    question: 'Se existisse um protocolo de 8 minutos provado, você faria todos os dias?',
+    intro: 'Imagina que esse caminho existe e está provado.',
+    question: 'Se existisse um protocolo de 8 minutos por dia, você faria todos os dias?',
     options: ['Sim, com certeza', 'Provavelmente sim', 'Dependeria da dificuldade', 'Teria dificuldade de manter'],
   },
   {
     type: 'question', id: 'melhor_horario', label: 'Rotina',
-    question: 'Qual o melhor momento para encaixar na sua rotina?',
+    intro: 'Vamos encaixar na sua vida real.',
+    question: 'Qual momento do dia funcionaria pra você?',
     options: ['Antes do trabalho', 'Na pausa do almoço', 'Em uma pausa no expediente', 'Após o trabalho'],
   },
   {
     type: 'question', id: 'sem_sair', label: 'Praticidade',
-    question: 'Você prefere uma solução que dá para fazer sem sair do lugar onde trabalha?',
+    intro: 'Praticidade é o que faz o hábito durar.',
+    question: 'Prefere algo que dá pra fazer sem sair da sua mesa?',
     options: ['Sim, com certeza', 'Tanto faz', 'Prefiro fora do ambiente de trabalho'],
   },
   {
     type: 'question', id: 'motivacao', label: 'Motivação',
-    question: 'O que te motivaria mais?',
+    intro: 'Última coisa antes do seu diagnóstico:',
+    question: 'O que mais te moveria a começar hoje?',
     options: [
       'Aliviar a dor rapidamente',
       'Ter mais energia e foco ao longo do dia',
@@ -252,14 +366,15 @@ const STEPS: Step[] = [
   },
   {
     type: 'question', id: 'pronto', label: 'Decisão',
-    question: 'Você está disposto a testar uma abordagem diferente do que tentou antes?',
+    intro: 'Então só me confirma:',
+    question: 'Você está disposto a testar uma abordagem diferente de tudo que já tentou?',
     options: ['Sim, estou pronto', 'Depende do que é', 'Estou cético mas curioso'],
   },
-  // DEPOIMENTOS (antes do diagnóstico)
+  // DEPOIMENTOS
   {
     type: 'testimonial',
     label: 'Quem já aplicou',
-    title: 'O que aconteceu com quem reverteu o Colapso de Ativação Lombar',
+    title: '{nome}, veja quem já reverteu o Colapso de Ativação Lombar',
     images: ['/depoimentos/depo-01.webp', '/depoimentos/depo-02.webp'],
     cta: 'Ver meu diagnóstico →',
   },
@@ -287,8 +402,7 @@ function getProgress(idx: number) {
 // ─── SUBCOMPONENTS ────────────────────────────────────────────────
 
 function Header({ step, stepIdx }: { step: Step; stepIdx: number }) {
-  if (step.type === 'result') return null
-  const qNum = step.type === 'question' ? getQuestionNumber(stepIdx) : null
+  if (step.type === 'result' || step.type === 'intro') return null
   const progress = getProgress(stepIdx)
   return (
     <div>
@@ -307,8 +421,117 @@ function Header({ step, stepIdx }: { step: Step; stepIdx: number }) {
   )
 }
 
-function QuestionView({ step, selected, onSelect, onContinue }: {
+function IntroView({ step, onContinue }: { step: IntroStep; onContinue: () => void }) {
+  return (
+    <div style={{ padding: '36px 20px 40px', display: 'flex', flexDirection: 'column', minHeight: '90vh' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 32 }}>
+        <img src="/icon.png" alt="" style={{ width: 30, height: 'auto', objectFit: 'contain' }} />
+        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 16, color: ACCENT, letterSpacing: 0.5 }}>
+          {PRODUCT_NAME_UPPER}
+        </span>
+      </div>
+
+      {step.image && (
+        <div style={{ borderRadius: 14, overflow: 'hidden', marginBottom: 28, border: `1px solid ${BORDER}` }}>
+          <img src={step.image} alt="" style={{ width: '100%', height: 'auto', display: 'block' }} />
+        </div>
+      )}
+
+      <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 32, color: DARK, lineHeight: 1.1, marginBottom: 14 }}>
+        {step.headline}
+      </h1>
+      {step.paren && (
+        <p style={{ fontSize: 15, color: ACCENT_TEXT, fontWeight: 600, marginBottom: 18 }}>
+          {step.paren}
+        </p>
+      )}
+      <p style={{ fontSize: 16, color: MUTED, lineHeight: 1.7, marginBottom: 'auto' }}>
+        {step.sub}
+      </p>
+
+      <button
+        onClick={onContinue}
+        style={{ marginTop: 32, width: '100%', padding: 17, background: ACCENT, color: WHITE, border: 'none', borderRadius: 10, fontFamily: "'Barlow', sans-serif", fontSize: 17, fontWeight: 700, cursor: 'pointer', letterSpacing: 0.3 }}
+      >
+        {step.cta}
+      </button>
+      <p style={{ marginTop: 14, fontSize: 13, color: MUTED, textAlign: 'center' }}>
+        {step.scarcity}
+      </p>
+    </div>
+  )
+}
+
+function NameView({ step, onSubmit }: { step: NameStep; onSubmit: (name: string) => void }) {
+  const [value, setValue] = useState('')
+  const valid = value.trim().length >= 2
+
+  function submit() {
+    if (valid) onSubmit(value.trim())
+  }
+
+  return (
+    <div style={{ padding: '40px 20px 40px', display: 'flex', flexDirection: 'column' }}>
+      <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 24, color: DARK, lineHeight: 1.25, marginBottom: 24 }}>
+        {step.title}
+      </h2>
+      <input
+        value={value}
+        onChange={e => setValue(e.target.value)}
+        onKeyDown={e => { if (e.key === 'Enter') submit() }}
+        placeholder={step.placeholder}
+        autoFocus
+        onFocus={e => (e.currentTarget.style.borderColor = ACCENT)}
+        onBlur={e => (e.currentTarget.style.borderColor = BORDER)}
+        style={{ width: '100%', boxSizing: 'border-box', padding: '15px 16px', border: `1.5px solid ${BORDER}`, borderRadius: 10, fontFamily: "'Barlow', sans-serif", fontSize: 16, color: DARK, outline: 'none', marginBottom: 20, transition: 'border-color 0.15s ease' }}
+      />
+      <button
+        onClick={submit}
+        disabled={!valid}
+        style={{ width: '100%', padding: 15, background: valid ? ACCENT : BORDER, color: valid ? WHITE : MUTED, border: 'none', borderRadius: 10, fontFamily: "'Barlow', sans-serif", fontSize: 16, fontWeight: 600, cursor: valid ? 'pointer' : 'default', transition: 'background 0.2s ease' }}
+      >
+        {step.cta}
+      </button>
+    </div>
+  )
+}
+
+function ReflectionView({ step, answers, onContinue }: { step: ReflectionStep; answers: Record<string, string | string[]>; onContinue: () => void }) {
+  return (
+    <div style={{ padding: '36px 20px 40px' }}>
+      {step.image && (
+        <div style={{ borderRadius: 14, overflow: 'hidden', marginBottom: 24, border: `1px solid ${BORDER}` }}>
+          <img src={step.image} alt="" style={{ width: '100%', height: 'auto', display: 'block' }} />
+        </div>
+      )}
+      <p style={{ fontSize: 18, color: DARK, lineHeight: 1.6, fontWeight: 500, marginBottom: step.highlight ? 18 : 14 }}>
+        {interpolate(step.body[0], answers)}
+      </p>
+      {step.highlight && (
+        <div style={{ padding: '16px 18px', background: ACCENT_LIGHT, borderLeft: `3px solid ${ACCENT}`, borderRadius: 8, marginBottom: 18 }}>
+          <p style={{ fontSize: 16, color: ACCENT_TEXT, fontWeight: 600, lineHeight: 1.5 }}>
+            {interpolate(step.highlight, answers)}
+          </p>
+        </div>
+      )}
+      {step.body.slice(1).map((p, i) => (
+        <p key={i} style={{ fontSize: 15, color: MUTED, lineHeight: 1.75, marginBottom: 14 }}>
+          {interpolate(p, answers)}
+        </p>
+      ))}
+      <button
+        onClick={onContinue}
+        style={{ marginTop: 18, width: '100%', padding: 15, background: ACCENT, color: WHITE, border: 'none', borderRadius: 10, fontFamily: "'Barlow', sans-serif", fontSize: 16, fontWeight: 600, cursor: 'pointer' }}
+      >
+        {step.cta}
+      </button>
+    </div>
+  )
+}
+
+function QuestionView({ step, answers, selected, onSelect, onContinue }: {
   step: QuestionStep
+  answers: Record<string, string | string[]>
   selected: string[]
   onSelect: (o: string) => void
   onContinue: () => void
@@ -319,6 +542,11 @@ function QuestionView({ step, selected, onSelect, onContinue }: {
       <p style={{ fontSize: 11, fontWeight: 600, color: ACCENT, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
         {step.label}
       </p>
+      {step.intro && (
+        <p style={{ fontSize: 14, color: MUTED, lineHeight: 1.6, marginBottom: 12 }}>
+          {interpolate(step.intro, answers)}
+        </p>
+      )}
       <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 22, color: DARK, lineHeight: 1.2, marginBottom: 22 }}>
         {step.question}
       </h2>
@@ -455,14 +683,14 @@ function TestimonialCarousel({ images }: { images: string[] }) {
   )
 }
 
-function TestimonialView({ step, onContinue }: { step: TestimonialStep; onContinue: () => void }) {
+function TestimonialView({ step, answers, onContinue }: { step: TestimonialStep; answers: Record<string, string | string[]>; onContinue: () => void }) {
   return (
     <div style={{ padding: '32px 18px 32px' }}>
       <p style={{ fontSize: 11, fontWeight: 600, color: ACCENT, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
         {step.label}
       </p>
       <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 22, color: DARK, lineHeight: 1.2, marginBottom: 18 }}>
-        {step.title}
+        {interpolate(step.title, answers)}
       </h2>
       <TestimonialCarousel images={step.images} />
       <button
@@ -475,7 +703,7 @@ function TestimonialView({ step, onContinue }: { step: TestimonialStep; onContin
   )
 }
 
-function BreakView({ step, onContinue }: { step: BreakStep; onContinue: () => void }) {
+function BreakView({ step, answers, onContinue }: { step: BreakStep; answers: Record<string, string | string[]>; onContinue: () => void }) {
   return (
     <div style={{ padding: '32px 18px 32px' }}>
       <div style={{ width: 48, height: 48, borderRadius: 10, background: ACCENT_LIGHT, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
@@ -485,11 +713,11 @@ function BreakView({ step, onContinue }: { step: BreakStep; onContinue: () => vo
         </svg>
       </div>
       <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 22, color: DARK, lineHeight: 1.2, marginBottom: 16 }}>
-        {step.title}
+        {interpolate(step.title, answers)}
       </h2>
       {step.body.map((p, i) => (
         <p key={i} style={{ fontSize: 14, color: MUTED, lineHeight: 1.7, marginBottom: i < step.body.length - 1 ? 12 : 24 }}>
-          {p}
+          {interpolate(p, answers)}
         </p>
       ))}
 
@@ -527,7 +755,7 @@ function BreakView({ step, onContinue }: { step: BreakStep; onContinue: () => vo
   )
 }
 
-function VSLView({ step, onComplete }: { step: VSLStep; onComplete: () => void }) {
+function VSLView({ step, answers, onComplete }: { step: VSLStep; answers: Record<string, string | string[]>; onComplete: () => void }) {
   const [slide, setSlide] = useState(0)
   const total = step.slides.length
   const current = step.slides[slide]
@@ -544,10 +772,10 @@ function VSLView({ step, onComplete }: { step: VSLStep; onComplete: () => void }
         Entenda o mecanismo
       </p>
       <h2 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 22, color: DARK, lineHeight: 1.2, marginBottom: 18 }}>
-        {current.title}
+        {interpolate(current.title, answers)}
       </h2>
       <p style={{ fontSize: 15, color: MUTED, lineHeight: 1.75, marginBottom: 32 }}>
-        {current.body}
+        {interpolate(current.body, answers)}
       </p>
       <button
         onClick={() => isLast ? onComplete() : setSlide(s => s + 1)}
@@ -559,15 +787,16 @@ function VSLView({ step, onComplete }: { step: VSLStep; onComplete: () => void }
   )
 }
 
-const LOADING_MSGS = [
-  'Analisando suas respostas...',
-  'Calculando nível de Colapso de Ativação Lombar...',
-  'Montando diagnóstico personalizado...',
-]
-
-function LoadingView({ onComplete }: { onComplete: () => void }) {
+function LoadingView({ answers, onComplete }: { answers: Record<string, string | string[]>; onComplete: () => void }) {
   const [progress, setProgress] = useState(0)
   const [msgIdx, setMsgIdx] = useState(0)
+  const nome = (answers['nome'] as string)?.trim() || ''
+
+  const loadingMsgs = [
+    nome ? `Analisando as respostas de ${nome}...` : 'Analisando suas respostas...',
+    'Calculando seu nível de Colapso de Ativação Lombar...',
+    'Montando seu protocolo personalizado...',
+  ]
 
   useEffect(() => {
     let p = 0
@@ -588,7 +817,7 @@ function LoadingView({ onComplete }: { onComplete: () => void }) {
         <div style={{ height: 6, width: `${progress}%`, background: ACCENT, borderRadius: 3, transition: 'width 0.2s ease' }} />
       </div>
       <p style={{ fontSize: 15, color: DARK, textAlign: 'center', fontWeight: 500, minHeight: 48, transition: 'opacity 0.3s' }}>
-        {LOADING_MSGS[msgIdx]}
+        {loadingMsgs[msgIdx]}
       </p>
       <p style={{ marginTop: 8, fontSize: 13, color: MUTED }}>{progress}%</p>
     </div>
@@ -596,10 +825,13 @@ function LoadingView({ onComplete }: { onComplete: () => void }) {
 }
 
 function ResultView({ answers }: { answers: Record<string, string | string[]> }) {
+  const nome = (answers['nome'] as string)?.trim() || ''
   const intensidade = (answers['intensidade'] as string) || ''
   const produtividade = (answers['produtividade'] as string) || ''
   const horas = (answers['horas_sentado'] as string) || 'várias horas'
   const tempoDor = (answers['tempo_dor'] as string) || ''
+  const ondeDor = (answers['onde_dor'] as string) || ''
+  const quandoDor = (answers['quando_dor'] as string) || ''
 
   const isAvancado =
     intensidade.includes('Forte') ||
@@ -618,7 +850,7 @@ function ResultView({ answers }: { answers: Record<string, string | string[]> })
           Diagnóstico concluído
         </p>
         <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 28, color: WHITE, lineHeight: 1.15, marginBottom: 16 }}>
-          Seu nível de Colapso de Ativação Lombar está identificado
+          {nome ? `${nome}, seu` : 'Seu'} nível de Colapso de Ativação Lombar está identificado
         </h1>
         <div style={{ display: 'inline-block', background: nivelColor, color: WHITE, fontWeight: 700, fontSize: 15, padding: '6px 18px', borderRadius: 20, letterSpacing: 0.5 }}>
           {nivel}
@@ -632,11 +864,13 @@ function ResultView({ answers }: { answers: Record<string, string | string[]> })
         </h2>
         <p style={{ fontSize: 14, color: MUTED, lineHeight: 1.7, marginBottom: 10 }}>
           Com <strong style={{ color: DARK }}>{horas}</strong> sentado por dia
-          {tempoDor ? ` e convivendo com dor lombar há ${tempoDor.toLowerCase()}` : ''}, seus
+          {tempoDor ? ` e convivendo com dor lombar há ${tempoDor.toLowerCase()}` : ''}
+          {ondeDor ? `, concentrada principalmente em ${ondeDor.toLowerCase()}` : ''}
+          {quandoDor ? `, que costuma apertar mais ${quandoDor.toLowerCase()}` : ''}, seus
           estabilizadores lombares estão em modo de hibernação crônica.
         </p>
         <p style={{ fontSize: 14, color: MUTED, lineHeight: 1.7 }}>
-          Isso não vai melhorar sozinho. Cada hora sentado reinicia o ciclo. A boa notícia é que o Colapso de Ativação Lombar tem solução — e ela leva 8 minutos por dia.
+          {nome ? `${nome}, isso` : 'Isso'} não vai melhorar sozinho. Cada hora sentado reinicia o ciclo. A boa notícia é que o Colapso de Ativação Lombar tem solução — e ela leva 8 minutos por dia.
         </p>
       </div>
 
@@ -791,6 +1025,11 @@ export default function App() {
     }
   }
 
+  function handleNameSubmit(name: string) {
+    setAnswers(a => ({ ...a, nome: name }))
+    advance()
+  }
+
   return (
     <div style={{ minHeight: '100%', background: PAGE_BG, display: 'flex', justifyContent: 'center' }}>
       <div
@@ -810,20 +1049,29 @@ export default function App() {
         <Header step={step} stepIdx={stepIdx} />
 
         <div style={{ flex: 1 }}>
+          {step.type === 'intro' && (
+            <IntroView step={step} onContinue={() => advance()} />
+          )}
+          {step.type === 'name' && (
+            <NameView step={step} onSubmit={handleNameSubmit} />
+          )}
+          {step.type === 'reflection' && (
+            <ReflectionView step={step} answers={answers} onContinue={() => advance()} />
+          )}
           {step.type === 'question' && (
-            <QuestionView step={step} selected={selected} onSelect={handleSelect} onContinue={handleContinue} />
+            <QuestionView step={step} answers={answers} selected={selected} onSelect={handleSelect} onContinue={handleContinue} />
           )}
           {step.type === 'break' && (
-            <BreakView step={step} onContinue={advance} />
+            <BreakView step={step} answers={answers} onContinue={() => advance()} />
           )}
           {step.type === 'vsl' && (
-            <VSLView step={step} onComplete={advance} />
+            <VSLView step={step} answers={answers} onComplete={() => advance()} />
           )}
           {step.type === 'testimonial' && (
-            <TestimonialView step={step} onContinue={advance} />
+            <TestimonialView step={step} answers={answers} onContinue={() => advance()} />
           )}
           {step.type === 'loading' && (
-            <LoadingView onComplete={advance} />
+            <LoadingView answers={answers} onComplete={() => advance()} />
           )}
           {step.type === 'result' && (
             <ResultView answers={answers} />
