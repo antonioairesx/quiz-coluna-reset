@@ -975,8 +975,9 @@ export default function App() {
   function advance(answeredText?: string) {
     const current = STEPS[stepIdx]
     if (current.type === 'question' && answeredText !== undefined) {
-      trackAnswer(stepIdx + 1, current.question, answeredText)
-    }
+  const qNum = getQuestionNumber(stepIdx)
+  trackAnswer(qNum, current.question, answeredText)
+}
     if (STEPS[stepIdx + 1]?.type === 'result') {
       completeQuizSession()
     }
