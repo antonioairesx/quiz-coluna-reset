@@ -338,7 +338,7 @@ const STEPS: Step[] = [
   {
     type: 'question', id: 'faria_protocolo', label: 'Comprometimento',
     intro: 'Imagina que esse caminho existe e está provado.',
-    question: 'Se existisse um protocolo de 8 minutos por dia, você faria todos os dias?',
+    question: 'Se existisse um protocolo de 8 minutos por dia capaz de eliminar suas dores nas costas, você faria todos os dias?',
     options: ['Sim, com certeza', 'Provavelmente sim', 'Dependeria da dificuldade', 'Teria dificuldade de manter'],
   },
   {
