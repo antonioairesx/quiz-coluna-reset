@@ -101,11 +101,11 @@ const STEPS: Step[] = [
   // ENTRADA
   {
     type: 'intro',
-    headline: 'Em 2 minutos você descobre o que realmente está por trás da sua dor lombar.',
-    paren: 'Não é postura. Não é colchão. Não é idade.',
-    sub: 'Responda algumas perguntas e receba o diagnóstico do seu padrão de Colapso de Ativação Lombar, montado a partir das suas respostas.',
+    headline: 'Em 2 minutos você vai descobrir o que realmente está por trás da sua dor lombar.',
+    paren: 'Não é postura. Não é colchão. E muito menos sua idade.',
+    sub: 'Preparei algumas perguntas e vou te entregar um diagnóstico para identificarmos de onde vai sua dor Lombar, montado a partir das suas respostas.',
     cta: 'Quero meu diagnóstico',
-    scarcity: 'Leva 2 minutos. Só dá pra responder uma vez.',
+    scarcity: 'Leva menos de 2 minutos e pode eliminar para sempre as suas dores nas costas',
     image: '/quiz/entrada.webp',
   },
 
