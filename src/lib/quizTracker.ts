@@ -70,9 +70,10 @@ export async function trackAnswer(
 export async function completeQuizSession(): Promise<void> {
   const id = sessionStorage.getItem(SS);
   if (!id) return;
-  await fetch(`${URL}/rest/v1/quiz_sessions?session_id=eq.${id}`, {
+  const res = await fetch(`${URL}/rest/v1/quiz_sessions?session_id=eq.${id}`, {
     method: "PATCH",
     headers: headers(),
     body: JSON.stringify({ completed_at: new Date().toISOString() }),
-  }).catch(() => {});
+  });
+  console.log("completeQuizSession status:", res.status, await res.text());
 }
