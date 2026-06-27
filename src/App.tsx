@@ -119,7 +119,7 @@ const STEPS: Step[] = [
   {
     type: 'question', id: 'idade', label: 'Sobre você',
     intro: 'Sua idade muda como a lombar reage ao tempo sentado.',
-    question: 'Em qual faixa você está?',
+    question: 'Qual sua idade atual?',
     options: ['25 a 35 anos', '36 a 45 anos', '46 a 55 anos', 'Acima de 55 anos'],
   },
   // CAPTURA DE NOME
