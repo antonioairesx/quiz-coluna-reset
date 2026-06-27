@@ -787,7 +787,7 @@ function VSLView({ step, answers, onComplete }: { step: VSLStep; answers: Record
   )
 }
 
-function LoadingView({ answers, onComplete }: { answers: Record<string, string | string[]>; onComplete: () => void }) {
+function LoadingView({ answers, onComplete }: { answers: Record<string, string | string[]>; onComplete: () => Promise<void> | void }) {
   const [progress, setProgress] = useState(0)
   const [msgIdx, setMsgIdx] = useState(0)
   const nome = (answers['nome'] as string)?.trim() || ''
@@ -805,7 +805,7 @@ function LoadingView({ answers, onComplete }: { answers: Record<string, string |
       setProgress(Math.min(100, Math.round(p)))
       if (p >= 30 && p < 32) setMsgIdx(1)
       if (p >= 65 && p < 67) setMsgIdx(2)
-      if (p >= 100) { clearInterval(iv); setTimeout(onComplete, 600) }
+      if (p >= 100) { clearInterval(iv); setTimeout(() => { onComplete() }, 600) }
     }, 45)
     return () => clearInterval(iv)
   }, [onComplete])
