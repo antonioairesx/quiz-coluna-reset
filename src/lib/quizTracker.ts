@@ -1,7 +1,6 @@
 // ============================================================
 // quizTracker.ts
-// Cole este arquivo no repo do quiz (quiz-coluna-reset),
-// ex: src/lib/quizTracker.ts
+// src/lib/quizTracker.ts no repo do quiz (quiz-coluna-reset)
 //
 // NAO precisa do @supabase/supabase-js no quiz.
 // Usa fetch puro na API REST do Supabase (PostgREST).
@@ -9,12 +8,6 @@
 // Envs no projeto do quiz (Vercel) com prefixo VITE_:
 //   VITE_SUPABASE_URL      = https://ptzblagrqvnmbvgnffnz.supabase.co
 //   VITE_SUPABASE_ANON_KEY = (anon key do projeto coluna-reset)
-//
-// A anon key pode ficar exposta no bundle: a RLS bloqueia leitura.
-// O quiz so consegue INSERIR, nunca ler resposta de ninguem.
-//
-// IMPORTANTE: grave PERGUNTA e RESPOSTA em texto legivel,
-// nunca o indice da opcao, senao o espelho vira numero sem sentido.
 // ============================================================
 
 const URL = import.meta.env.VITE_SUPABASE_URL as string;
@@ -39,24 +32,28 @@ function getUtm() {
   };
 }
 
-// Cria a sessao 1x (no inicio do quiz). Idempotente por sessionStorage.
 export async function startQuizSession(): Promise<string> {
   let id = sessionStorage.getItem(SS);
   if (id) return id;
-
   id = crypto.randomUUID();
   sessionStorage.setItem(SS, id);
+
+  let ip: string | null = null;
+  try {
+    const r = await fetch("https://api.ipify.org?format=json");
+    const j = await r.json();
+    ip = j.ip ?? null;
+  } catch {}
 
   await fetch(`${URL}/rest/v1/quiz_sessions`, {
     method: "POST",
     headers: headers(),
-    body: JSON.stringify({ session_id: id, ...getUtm() }),
+    body: JSON.stringify({ session_id: id, ip, ...getUtm() }),
   }).catch(() => {});
 
   return id;
 }
 
-// Chamar NO MOMENTO da transicao de etapa (nao no mount).
 export async function trackAnswer(
   step: number,
   pergunta: string,
@@ -70,7 +67,6 @@ export async function trackAnswer(
   }).catch(() => {});
 }
 
-// Chamar quando o usuario chega na tela final / resultado.
 export async function completeQuizSession(): Promise<void> {
   const id = sessionStorage.getItem(SS);
   if (!id) return;
