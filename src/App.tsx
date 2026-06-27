@@ -972,14 +972,14 @@ export default function App() {
     topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }, [stepIdx])
 
-  function advance(answeredText?: string) {
+  async function advance(answeredText?: string) {
     const current = STEPS[stepIdx]
     if (current.type === 'question' && answeredText !== undefined) {
-  const qNum = getQuestionNumber(stepIdx)
-  trackAnswer(qNum, current.question, answeredText)
-}
+      const qNum = getQuestionNumber(stepIdx)
+      trackAnswer(qNum, current.question, answeredText)
+    }
     if (STEPS[stepIdx + 1]?.type === 'result') {
-      completeQuizSession()
+      await completeQuizSession()
     }
     setFading(true)
     setTimeout(() => {
