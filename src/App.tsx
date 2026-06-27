@@ -1072,7 +1072,7 @@ export default function App() {
             <TestimonialView step={step} answers={answers} onContinue={() => advance()} />
           )}
           {step.type === 'loading' && (
-            <LoadingView answers={answers} onComplete={() => advance()} />
+            <LoadingView answers={answers} onComplete={advance} />
           )}
           {step.type === 'result' && (
             <ResultView answers={answers} />
