@@ -798,14 +798,20 @@ function LoadingView({ answers, onComplete }: { answers: Record<string, string |
     'Montando seu protocolo personalizado...',
   ]
 
-  useEffect(() => {
+ useEffect(() => {
     let p = 0
     const iv = setInterval(() => {
       p += 1.5
       setProgress(Math.min(100, Math.round(p)))
       if (p >= 30 && p < 32) setMsgIdx(1)
       if (p >= 65 && p < 67) setMsgIdx(2)
-      if (p >= 100) { clearInterval(iv); setTimeout(() => { onComplete() }, 600) }
+      if (p >= 100) {
+        clearInterval(iv)
+        setTimeout(async () => {
+          await completeQuizSession()
+          onComplete()
+        }, 600)
+      }
     }, 45)
     return () => clearInterval(iv)
   }, [onComplete])
@@ -977,9 +983,6 @@ export default function App() {
     if (current.type === 'question' && answeredText !== undefined) {
       const qNum = getQuestionNumber(stepIdx)
       trackAnswer(qNum, current.question, answeredText)
-    }
-    if (STEPS[stepIdx + 1]?.type === 'result') {
-      await completeQuizSession()
     }
     setFading(true)
     setTimeout(() => {
