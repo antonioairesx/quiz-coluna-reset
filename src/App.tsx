@@ -118,7 +118,7 @@ const STEPS: Step[] = [
   },
   {
     type: 'question', id: 'idade', label: 'Sobre você',
-    intro: 'Sua idade muda como a lombar reage ao tempo sentado.',
+    intro: 'Sua idade muda como a lombar reage ao tempo sentado(a).',
     question: 'Qual sua idade atual?',
     options: ['25 a 35 anos', '36 a 45 anos', '46 a 55 anos', 'Acima de 55 anos'],
   },
@@ -132,7 +132,7 @@ const STEPS: Step[] = [
   {
     type: 'question', id: 'horas_sentado', label: 'Sua rotina',
     intro: '{nome}, agora a pergunta que mais pesa no seu caso:',
-    question: 'Quantas horas por dia você passa sentado trabalhando?',
+    question: 'Quantas horas por dia você passa sentado(a) trabalhando?',
     options: ['Menos de 4 horas', 'De 4 a 6 horas', 'De 6 a 8 horas', 'Mais de 8 horas'],
   },
   {
