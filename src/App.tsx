@@ -153,7 +153,7 @@ const STEPS: Step[] = [
   },
   {
     type: 'question', id: 'tentou_antes', label: 'Histórico',
-    intro: 'Quero entender seu histórico antes de te dar o caminho certo.',
+    intro: '{nome}, antes de te mostrar como resolver suas dores nas costas, precisamos entender seu histórico. Com isso consigo personalizar o seu diagnóstico.',
     question: 'Antes de hoje, você já tentou resolver isso?',
     options: [
       'Sim, mas não funcionou',
@@ -337,9 +337,9 @@ const STEPS: Step[] = [
   // BLOCO D — Pré-comprometimento
   {
     type: 'question', id: 'faria_protocolo', label: 'Comprometimento',
-    intro: 'Imagina que esse caminho existe e está provado.',
-    question: 'Se existisse um protocolo de 8 minutos por dia capaz de eliminar suas dores nas costas, você faria todos os dias?',
-    options: ['Sim, com certeza', 'Provavelmente sim', 'Dependeria da dificuldade', 'Teria dificuldade de manter'],
+    intro: 'Pensando na sua rotina de hoje...',
+    question: 'Eu desenvolvi um método em que, com 8 minutos por dia, sem equipamento e sem sair da sua cadeira, é possível eliminar a sua dor. Você toparia encaixar isso na sua rotina?',
+    options: ['Sim, isso eu consigo', 'Sim, se for simples assim', 'Só se realmente funcionar', 'Tenho medo de não manter'],
   },
   {
     type: 'question', id: 'melhor_horario', label: 'Rotina',
@@ -355,13 +355,13 @@ const STEPS: Step[] = [
   },
   {
     type: 'question', id: 'motivacao', label: 'Motivação',
-    intro: 'Última coisa antes do seu diagnóstico:',
-    question: 'O que mais te moveria a começar hoje?',
+    intro: 'Última coisa antes do seu diagnóstico, {nome}:',
+    question: 'Hoje pensando em tudo que você vem sentindo, o que seria um diferencial para você?',
     options: [
-      'Aliviar a dor rapidamente',
-      'Ter mais energia e foco ao longo do dia',
-      'Evitar que a dor piore com a idade',
-      'As três coisas',
+      'Trabalhar sem o incômodo travando meu foco',
+      'Ter energia que sobra pro fim do dia',
+      'Não viver com medo de piorar',
+      'Tudo isso de uma vez',
     ],
   },
   {
